@@ -24,7 +24,8 @@ body.light{
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text-pri);font-family:var(--font-body);
      min-height:100vh;display:flex;flex-direction:column;align-items:center;
-     transition:background .3s}
+     transition:background-color .3s}
+#bg-glow{position:fixed;inset:0;z-index:-1;pointer-events:none;transition:background 0.6s ease}
 #theme-btn{position:fixed;top:14px;right:18px;z-index:9999;
   background:rgba(59,130,246,0.12);color:var(--text-pri);
   border:1.5px solid var(--border);border-radius:6px;
@@ -50,26 +51,39 @@ select:hover,select:focus,.search-input:focus{border-color:var(--blue)}
 /* ── Dashboard grid ── */
 .dash{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
        max-width:1320px;width:100%;padding:18px 20px 30px}
-.card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px 20px}
+.card{background:linear-gradient(180deg,var(--panel),var(--panel) 60%,var(--panel2));
+       border:1px solid var(--border);border-top:2.5px solid var(--accent-c, var(--border));
+       border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;
+       box-shadow:0 1px 0 rgba(255,255,255,0.02) inset;
+       transition:transform .18s ease, box-shadow .18s ease}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 28px -8px var(--accent-glow, rgba(0,0,0,0.4))}
 .card-title{font-size:.66rem;color:var(--text-sec);letter-spacing:.13em;
              text-transform:uppercase;margin-bottom:12px}
 
 /* KPI strip */
-.kpi-strip{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap}
-.kpi{flex:1;min-width:110px;background:var(--panel);border:1px solid var(--border);
-      border-radius:12px;padding:14px 16px;text-align:center}
+.kpi-strip{grid-column:1/-1;display:flex;gap:12px;flex-wrap:wrap;border-top:none !important;
+            background:none !important;padding:0 !important;box-shadow:none !important}
+.kpi{flex:1;min-width:110px;background:linear-gradient(160deg,var(--panel),var(--panel2));
+      border:1px solid var(--border);border-top:2.5px solid var(--accent-c, var(--border));
+      border-radius:12px;padding:14px 16px;text-align:center;
+      transition:transform .18s ease, box-shadow .18s ease}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 8px 22px -6px var(--accent-glow, rgba(0,0,0,0.4))}
 .kpi .lbl{font-size:.60rem;color:var(--text-sec);letter-spacing:.12em;text-transform:uppercase}
 .kpi .val{font-family:var(--font-head);font-size:1.8rem;letter-spacing:.04em;margin-top:2px}
 
 /* Identity card */
-.identity{grid-column:span 1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
-.identity .team-name{font-family:var(--font-head);font-size:1.6rem;text-align:center;line-height:1.05}
+.identity{grid-column:span 1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;
+           background:radial-gradient(ellipse at 50% 30%, var(--accent-wash, transparent), var(--panel) 70%)}
+.identity .team-name{font-family:var(--font-head);font-size:1.8rem;text-align:center;line-height:1.05;
+                       text-shadow:0 0 18px var(--accent-glow, transparent)}
 .identity .pos{font-size:.78rem;color:var(--text-sec)}
 
 /* Form chips */
 .form-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
 .form-chip{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-            font-weight:700;font-size:.78rem;color:#fff;cursor:pointer;flex-shrink:0}
+            font-weight:700;font-size:.78rem;color:#fff;cursor:pointer;flex-shrink:0;
+            transition:transform .12s ease}
+.form-chip:hover{transform:scale(1.18)}
 .form-chip.W{background:var(--green)}
 .form-chip.D{background:var(--amber)}
 .form-chip.L{background:var(--red)}
@@ -83,7 +97,9 @@ select:hover,select:focus,.search-input:focus{border-color:var(--blue)}
 .trend-line{width:14px;height:2px}
 
 /* Scorers list */
-.scorer-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:.82rem}
+.scorer-row{display:flex;align-items:center;gap:10px;padding:6px 4px;font-size:.82rem;
+             border-radius:6px;cursor:pointer;transition:background .12s}
+.scorer-row:hover{background:rgba(255,255,255,0.04)}
 .scorer-bar-track{flex:1;height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}
 .scorer-bar-fill{height:100%;border-radius:4px}
 .scorer-name{width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -118,6 +134,7 @@ footer{margin:6px 0 26px;font-size:.66rem;color:var(--text-sec);
 </style>
 </head>
 <body>
+<div id="bg-glow"></div>
 <button id="theme-btn" onclick="toggleTheme()">&#9728; LIGHT MODE</button>
 <div id="tooltip"></div>
 
@@ -162,11 +179,26 @@ function ordinal(n) {
   return n + (s[(v-20)%10] || s[v] || s[0]);
 }
 
+function hexAlpha(hex, alpha) {
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function applyTeamTheme(color) {
+  const root = document.documentElement.style;
+  root.setProperty('--accent-c', color);
+  root.setProperty('--accent-glow', hexAlpha(color, 0.45));
+  root.setProperty('--accent-wash', hexAlpha(color, 0.16));
+  document.getElementById('bg-glow').style.background =
+    `radial-gradient(ellipse 60% 40% at 50% 0%, ${hexAlpha(color,0.16)}, transparent 65%)`;
+}
+
 function render() {
   const name = document.getElementById('sel-team').value;
   const t = TEAMS_DATA.find(x => x.team === name);
   if (!t) return;
   const color = TEAM_COLORS[t.team] || '#3B82F6';
+  applyTeamTheme(color);
 
   document.getElementById('dash').innerHTML = `
     <div class="card kpi-strip">
@@ -180,6 +212,7 @@ function render() {
     </div>
 
     <div class="card identity">
+
       <div class="team-name" style="color:${color}">${t.team}</div>
       <div class="pos">${ordinal(t.position)} place · ${t.points} pts</div>
     </div>
@@ -230,23 +263,37 @@ function render() {
   buildTrendChart(t, color);
   buildScorersList(t, color);
   buildShotMap(t, color);
+  initDashHover();
 }
 
 function buildFormRow(t, color) {
   const wrap = document.getElementById('form-row');
+  const tooltip = document.getElementById('tooltip');
   wrap.innerHTML = '';
   t.form.forEach(f => {
     const chip = document.createElement('div');
     chip.className = 'form-chip ' + f.result;
     chip.textContent = f.result;
-    chip.title = `${f.is_home?'vs':'@'} ${f.opponent} — ${f.gf}-${f.ga}`;
+    chip.addEventListener('mouseenter', e => {
+      tooltip.innerHTML = `<b style="color:${color}">${f.is_home?'vs':'@'} ${f.opponent}</b><br>${f.gf} - ${f.ga}`;
+      tooltip.style.display = 'block';
+    });
+    chip.addEventListener('mousemove', e => {
+      let left=e.clientX+12, top=e.clientY+12;
+      if (left+180>window.innerWidth) left=e.clientX-190;
+      tooltip.style.left=left+'px'; tooltip.style.top=top+'px';
+    });
+    chip.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
     wrap.appendChild(chip);
   });
 }
 
+let _trendPoints = [];
+
 function buildTrendChart(t, color) {
   const svg = document.getElementById('trend-svg');
   svg.innerHTML = '';
+  _trendPoints = [];
   const W=600,H=260,PAD_L=36,PAD_R=14,PAD_T=14,PAD_B=26;
   const PW=W-PAD_L-PAD_R, PH=H-PAD_T-PAD_B;
   const trend = t.trend;
@@ -273,31 +320,116 @@ function buildTrendChart(t, color) {
   svg.appendChild(svgEl('path', {d:pathFor('gf'), fill:'none', stroke:color, 'stroke-width':2.5}));
 
   trend.forEach((d,i) => {
-    svg.appendChild(svgEl('circle', {cx:xAt(i),cy:yAt(d.gf),r:3,fill:color}));
-    svg.appendChild(svgEl('circle', {cx:xAt(i),cy:yAt(d.ga),r:2.5,fill:'#888'}));
+    const cxv = xAt(i);
+    const gfDot = svgEl('circle', {cx:cxv,cy:yAt(d.gf),r:3,fill:color,style:'cursor:pointer'});
+    const gaDot = svgEl('circle', {cx:cxv,cy:yAt(d.ga),r:2.5,fill:'#888',style:'cursor:pointer'});
+    svg.appendChild(gfDot);
+    svg.appendChild(gaDot);
+    _trendPoints.push({x:cxv,y:yAt(d.gf),match:d});
+    _trendPoints.push({x:cxv,y:yAt(d.ga),match:d});
+  });
+}
+
+function initDashHover() {
+  const tooltip = document.getElementById('tooltip');
+
+  function attach(svgId, getPoints, formatFn) {
+    const svg = document.getElementById(svgId);
+    svg.addEventListener('mousemove', e => {
+      const rect = svg.getBoundingClientRect();
+      const vb = svg.viewBox.baseVal;
+      const scaleX = vb.width/rect.width, scaleY = vb.height/rect.height;
+      const mx = (e.clientX-rect.left)*scaleX, my = (e.clientY-rect.top)*scaleY;
+
+      let hit=null, bestD=Infinity;
+      getPoints().forEach(p => {
+        const d = Math.hypot(p.x-mx, p.y-my);
+        const thresh = p.r ? p.r+4 : 7;
+        if (d<thresh && d<bestD) { hit=p; bestD=d; }
+      });
+
+      if (hit) {
+        tooltip.innerHTML = formatFn(hit);
+        tooltip.style.display='block';
+        let left=e.clientX+14, top=e.clientY+14;
+        if (left+200>window.innerWidth) left=e.clientX-210;
+        if (top+110>window.innerHeight) top=e.clientY-110;
+        tooltip.style.left=left+'px'; tooltip.style.top=top+'px';
+      } else {
+        tooltip.style.display='none';
+      }
+    });
+    svg.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
+  }
+
+  attach('trend-svg', () => _trendPoints, hit => {
+    const m = hit.match;
+    return `<b>vs ${m.opponent}</b><br>${m.gf} - ${m.ga}<br>xG For: ${m.xgf} · xG Against: ${m.xga}`;
+  });
+
+  attach('shotmap-svg', () => _shotMapPoints, hit => {
+    const s = hit.shot;
+    return `Outcome: <b>${s.outcome}</b><br>xG: <b>${(s.xg||0).toFixed(2)}</b>`;
   });
 }
 
 function buildScorersList(t, color) {
   const wrap = document.getElementById('scorers-list');
+  const tooltip = document.getElementById('tooltip');
   const maxGoals = t.scorers.length ? t.scorers[0].goals : 1;
-  wrap.innerHTML = t.scorers.map(s => `
-    <div class="scorer-row">
+  wrap.innerHTML = t.scorers.map((s,i) => `
+    <div class="scorer-row" data-idx="${i}">
       <div class="scorer-name">${s.player}</div>
       <div class="scorer-bar-track"><div class="scorer-bar-fill" style="width:${(s.goals/maxGoals*100)}%;background:${color}"></div></div>
       <div class="scorer-goals">${s.goals}</div>
     </div>
   `).join('') || '<div style="color:var(--text-sec);font-size:.8rem">No goals recorded</div>';
+
+  wrap.querySelectorAll('.scorer-row').forEach(row => {
+    const s = t.scorers[parseInt(row.dataset.idx)];
+    row.addEventListener('mouseenter', () => {
+      const pct = t.gf ? Math.round(s.goals/t.gf*100) : 0;
+      tooltip.innerHTML = `<b style="color:${color}">${s.player}</b><br>${s.goals} goals · ${pct}% of team's total`;
+      tooltip.style.display = 'block';
+    });
+    row.addEventListener('mousemove', e => {
+      let left=e.clientX+12, top=e.clientY+12;
+      if (left+200>window.innerWidth) left=e.clientX-210;
+      tooltip.style.left=left+'px'; tooltip.style.top=top+'px';
+    });
+    row.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
+  });
 }
+
+let _shotMapPoints = [];
 
 function buildShotMap(t, color) {
   const svg = document.getElementById('shotmap-svg');
   svg.innerHTML = '';
+  _shotMapPoints = [];
+
   svg.appendChild(svgEl('rect', {x:0,y:0,width:360,height:480,fill:'var(--pitch-bg)',rx:8}));
-  svg.appendChild(svgEl('rect', {x:10,y:10,width:340,height:460,fill:'none',stroke:'rgba(255,255,255,0.5)','stroke-width':1.5}));
-  svg.appendChild(svgEl('rect', {x:85,y:330,width:190,height:130,fill:'none',stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
-  svg.appendChild(svgEl('rect', {x:135,y:418,width:90,height:42,fill:'none',stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
+
+  // Grass mowing stripes
+  for (let i=0; i<6; i++) {
+    svg.appendChild(svgEl('rect', {x:10+i*56.7,y:10,width:28.3,height:460,
+                                     fill:'#fff','fill-opacity':0.025}));
+  }
+
+  svg.appendChild(svgEl('rect', {x:10,y:10,width:340,height:460,fill:'none',stroke:'rgba(255,255,255,0.55)','stroke-width':1.5}));
+  // Halfway line + center circle (this view is the attacking half only)
+  svg.appendChild(svgEl('line', {x1:10,y1:20,x2:350,y2:20,stroke:'rgba(255,255,255,0.45)','stroke-width':1.3}));
+  svg.appendChild(svgEl('path', {d:'M 138 20 A 42 42 0 0 0 222 20', fill:'none', stroke:'rgba(255,255,255,0.35)','stroke-width':1.2}));
+  svg.appendChild(svgEl('circle', {cx:180,cy:20,r:2,fill:'rgba(255,255,255,0.5)'}));
+  // Penalty + six-yard box
+  svg.appendChild(svgEl('rect', {x:85,y:330,width:190,height:130,fill:'none',stroke:'rgba(255,255,255,0.45)','stroke-width':1.2}));
+  svg.appendChild(svgEl('rect', {x:135,y:418,width:90,height:42,fill:'none',stroke:'rgba(255,255,255,0.45)','stroke-width':1.2}));
   svg.appendChild(svgEl('path', {d:'M 148 330 A 42 42 0 0 1 212 330', fill:'none', stroke:'rgba(255,255,255,0.35)','stroke-width':1.2}));
+  svg.appendChild(svgEl('circle', {cx:180,cy:380,r:2,fill:'rgba(255,255,255,0.6)'}));
+  // Goal mouth + corner arcs
+  svg.appendChild(svgEl('rect', {x:155,y:466,width:50,height:6,fill:'rgba(255,255,255,0.85)'}));
+  svg.appendChild(svgEl('path', {d:'M 10 462 A 8 8 0 0 0 18 470', fill:'none', stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
+  svg.appendChild(svgEl('path', {d:'M 350 462 A 8 8 0 0 1 342 470', fill:'none', stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
 
   const PAD=10, GOAL_Y=470, MAP_H=450, MAX_DIST=60, FULL_W=340;
   const xScale = y80 => PAD + (y80/80)*FULL_W;
@@ -308,9 +440,12 @@ function buildShotMap(t, color) {
     const cx = xScale(s.y), cy = yScale(120-s.x);
     const isGoal = s.outcome === 'Goal';
     const r = 2.4 + Math.sqrt(s.xg||0)*9;
-    svg.appendChild(svgEl('circle', {cx,cy,r,fill: isGoal ? color : '#fff',
+    const dot = svgEl('circle', {cx,cy,r,fill: isGoal ? color : '#fff',
                                        'fill-opacity': isGoal?0.85:0.28,
-                                       stroke: isGoal?'#fff':'none','stroke-width':isGoal?1.5:0}));
+                                       stroke: isGoal?'#fff':'none','stroke-width':isGoal?1.5:0,
+                                       style:'cursor:pointer'});
+    svg.appendChild(dot);
+    _shotMapPoints.push({x:cx,y:cy,r,shot:s});
   });
 }
 
