@@ -231,17 +231,17 @@ function render() {
       </div>
     </div>
 
-    <div class="card" style="grid-column:span 3">
+    <div class="card" style="grid-column:span 3;display:flex;flex-direction:column">
       <div class="card-title">Top Scorers</div>
-      <div id="scorers-list"></div>
+      <div id="scorers-list" style="flex:1;display:flex;flex-direction:column;justify-content:space-evenly"></div>
     </div>
 
     <div class="card shotmap-card">
       <div class="card-title">Season Shot Map</div>
-      <svg id="shotmap-svg" viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg" style="flex:1"></svg>
+      <svg id="shotmap-svg" viewBox="0 0 480 400" xmlns="http://www.w3.org/2000/svg" style="flex:1"></svg>
     </div>
 
-    <div class="card" style="grid-column:span 3;display:flex;flex-direction:column;gap:14px">
+    <div class="card" style="grid-column:span 3;display:flex;flex-direction:column;justify-content:space-evenly">
       <div>
         <div class="card-title">Discipline</div>
         <div class="mini-stat-row"><span>Fouls Committed</span><span class="v">${t.fouls}</span></div>
@@ -408,36 +408,36 @@ function buildShotMap(t, color) {
   svg.innerHTML = '';
   _shotMapPoints = [];
 
-  svg.appendChild(svgEl('rect', {x:0,y:0,width:480,height:320,fill:'var(--pitch-bg)',rx:8}));
+  svg.appendChild(svgEl('rect', {x:0,y:0,width:480,height:400,fill:'var(--pitch-bg)',rx:8}));
 
-  // Grass mowing stripes (vertical bands along the attacking direction)
+  // Grass mowing stripes
   for (let i=0; i<8; i++) {
-    svg.appendChild(svgEl('rect', {x:10+i*57.5,y:10,width:28.75,height:300,
+    svg.appendChild(svgEl('rect', {x:20+i*55,y:20,width:27.5,height:360,
                                      fill:'#fff','fill-opacity':0.025}));
   }
 
-  svg.appendChild(svgEl('rect', {x:10,y:10,width:460,height:300,fill:'none',stroke:'rgba(255,255,255,0.55)','stroke-width':1.5}));
-  // Halfway line + center circle (right edge — this view is the attacking half only)
-  svg.appendChild(svgEl('line', {x1:470,y1:10,x2:470,y2:310,stroke:'rgba(255,255,255,0.45)','stroke-width':1.3}));
-  svg.appendChild(svgEl('path', {d:'M 470 138 A 42 42 0 0 0 470 182', fill:'none', stroke:'rgba(255,255,255,0.35)','stroke-width':1.2}));
-  svg.appendChild(svgEl('circle', {cx:470,cy:160,r:2,fill:'rgba(255,255,255,0.5)'}));
-  // Penalty + six-yard box (goal on the left)
-  svg.appendChild(svgEl('rect', {x:10,y:77,width:138,height:166,fill:'none',stroke:'rgba(255,255,255,0.45)','stroke-width':1.2}));
-  svg.appendChild(svgEl('rect', {x:10,y:122,width:46,height:76,fill:'none',stroke:'rgba(255,255,255,0.45)','stroke-width':1.2}));
-  svg.appendChild(svgEl('path', {d:'M 148 138 A 42 42 0 0 1 148 182', fill:'none', stroke:'rgba(255,255,255,0.35)','stroke-width':1.2}));
-  svg.appendChild(svgEl('circle', {cx:102,cy:160,r:2,fill:'rgba(255,255,255,0.6)'}));
+  svg.appendChild(svgEl('rect', {x:20,y:20,width:440,height:360,fill:'none',stroke:'rgba(255,255,255,0.55)','stroke-width':1.5}));
+  // Halfway line + center circle (top edge — this view is the attacking half only)
+  svg.appendChild(svgEl('line', {x1:20,y1:20,x2:460,y2:20,stroke:'rgba(255,255,255,0.45)','stroke-width':1.3}));
+  svg.appendChild(svgEl('path', {d:'M 176 20 A 64 64 0 0 0 304 20', fill:'none', stroke:'rgba(255,255,255,0.35)','stroke-width':1.2}));
+  svg.appendChild(svgEl('circle', {cx:240,cy:20,r:2.5,fill:'rgba(255,255,255,0.5)'}));
+  // Penalty + six-yard box (goal at the bottom)
+  svg.appendChild(svgEl('rect', {x:119,y:272,width:242,height:108,fill:'none',stroke:'rgba(255,255,255,0.45)','stroke-width':1.2}));
+  svg.appendChild(svgEl('rect', {x:185,y:344,width:110,height:36,fill:'none',stroke:'rgba(255,255,255,0.45)','stroke-width':1.2}));
+  svg.appendChild(svgEl('path', {d:'M 176 272 A 64 64 0 0 1 304 272', fill:'none', stroke:'rgba(255,255,255,0.35)','stroke-width':1.2}));
+  svg.appendChild(svgEl('circle', {cx:240,cy:308,r:2.5,fill:'rgba(255,255,255,0.6)'}));
   // Goal mouth + corner arcs
-  svg.appendChild(svgEl('rect', {x:4,y:135,width:6,height:50,fill:'rgba(255,255,255,0.85)'}));
-  svg.appendChild(svgEl('path', {d:'M 14 10 A 8 8 0 0 0 10 18', fill:'none', stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
-  svg.appendChild(svgEl('path', {d:'M 14 310 A 8 8 0 0 1 10 302', fill:'none', stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
+  svg.appendChild(svgEl('rect', {x:218,y:374,width:44,height:6,fill:'rgba(255,255,255,0.85)'}));
+  svg.appendChild(svgEl('path', {d:'M 20 370 A 8 8 0 0 0 28 380', fill:'none', stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
+  svg.appendChild(svgEl('path', {d:'M 460 370 A 8 8 0 0 1 452 380', fill:'none', stroke:'rgba(255,255,255,0.4)','stroke-width':1.2}));
 
-  const GOAL_X=10, MAP_W=460, MAX_DIST=60, FULL_H=300, PAD=10;
-  const xScale = dist => GOAL_X + (Math.min(dist,MAX_DIST)/MAX_DIST)*MAP_W;
-  const yScale = y80 => PAD + (y80/80)*FULL_H;
+  const PAD=20, GOAL_Y=380, MAP_H=360, MAX_DIST=60, FULL_W=440;
+  const xScale = y80 => PAD + (y80/80)*FULL_W;
+  const yScale = dist => GOAL_Y - (Math.min(dist,MAX_DIST)/MAX_DIST)*MAP_H;
 
   t.shot_map.forEach(s => {
     if (s.x===null || s.y===null) return;
-    const cx = xScale(120-s.x), cy = yScale(s.y);
+    const cx = xScale(s.y), cy = yScale(120-s.x);
     const isGoal = s.outcome === 'Goal';
     const r = 2.4 + Math.sqrt(s.xg||0)*9;
     const dot = svgEl('circle', {cx,cy,r,fill: isGoal ? color : '#fff',
